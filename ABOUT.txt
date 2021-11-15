@@ -1,0 +1,6 @@
+Valorant Custom Home Screen Launcher
+Version: 2.0.0
+Developed By: Sreekar Palla
+Valorant Custom Home Screen Launcher is a tool to help you customize your in-game VALORANT home screen video!
+Valorant Custom Home Screen Launcher is licensed under the Apache License version 2.0!
+Thank You For Using Valorant Custom Home Screen Launcher!

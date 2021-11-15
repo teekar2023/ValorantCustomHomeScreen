@@ -1,0 +1,20 @@
+New In Version 2.0.0:
+---MAJOR UPDATE---
+Complete re-write of program!
+New GUI launcher!
+Ton of bug fixes:
+- Fixed a bug where the program would continue to run normally after user removed all videos but would crash when trying to inject video!
+- Fixed a few bugs where program would crash and not work properly!
+- Fixed a bug where removing the video with id '1' would reset the program!
+- Other minor bugs fixed!
+Ton of new features:
+- Help window with user guide in dropdown menu!
+- Automatic update checker!
+- New update window!
+- New changelog!
+- New feature to see list of videos currently in use!
+- Restart is no longer required after adding/removing a video!
+- New in-app changelog window!
+- New reset functionality in dropdown menu!
+- New restart button in dropdown menu!
+- New exit button in dropdown menu!
