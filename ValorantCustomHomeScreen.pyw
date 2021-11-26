@@ -1,8 +1,9 @@
+from gettext import install
 import os
 import sys
 import random
-import time
 import sqlite3
+from tokenize import String
 import requests
 import urllib
 import webbrowser
@@ -13,6 +14,7 @@ from shutil import copy, rmtree
 from threading import Thread
 from tkinter import *
 from tkinter import filedialog
+from tkinter.filedialog import askdirectory
 from tkinter.simpledialog import askstring
 
 
@@ -39,7 +41,7 @@ def update():
     url = "http://github.com/teekar2023/ValorantCustomHomeScreen/releases/latest/"
     r = requests.get(url, allow_redirects=True)
     redirected_url = r.url
-    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.0.0":
+    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.1.0":
         new_url = str(redirected_url) + "/ValCustomHomeSetup.exe"
         download_url = new_url.replace("tag", "download")
         update_window = Toplevel(root)
@@ -133,9 +135,10 @@ def about():
 def reset():
     reset_confirm = askyesno("Reset", "Are You Sure You Want To Reset The Launcher?")
     if reset_confirm:
-        rmtree(f"{cwd}\\Videos\\")
+        rmtree(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\")
         connection.close()
-        os.remove(f"{cwd}\\videos.sqlite")
+        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
+        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt")
         showinfo("Reset", "The Launcher Has Been Reset! Please Restart To Use Again!")
         restart_confirm = askyesno("Restart", "Would You Like To Restart The Launcher?")
         if restart_confirm:
@@ -160,7 +163,14 @@ def exit_launcher():
         sys.exit(0)
     else:
         pass
-        
+
+
+def exit_launcher_param(event):
+    exit_ask = askyesno("Exit", "Are You Sure You Want To Exit The Launcher?")
+    if exit_ask:
+        sys.exit(0)
+    else:
+        pass
 
 
 def create_connection(path):
@@ -197,17 +207,17 @@ def setup():
     global start_button
     global settings_button
     try:
-        connection.close()  # this will be seen as an error/warning but it is functional
-        os.remove(f"{cwd}\\videos.sqlite")
+        connection.close()  # this may be seen as an error/warning but it is functional
+        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
         pass
     except Exception:
         pass
-    if not os.path.exists(f"{cwd}\\videos.sqlite"):
-        open(f"{cwd}\\videos.sqlite", "w+")
+    if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite"):
+        open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite", "w+")
         pass
     else:
         pass
-    connection = create_connection(f"{cwd}\\videos.sqlite")
+    connection = create_connection(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
     create_videos_table = """
     CREATE TABLE IF NOT EXISTS videos (
         id integer PRIMARY KEY AUTOINCREMENT,
@@ -231,11 +241,11 @@ def setup():
         pass
     except Exception:
         connection.close()
-        os.remove(f"{cwd}\\videos.sqlite")
+        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
         sys.exit(0)
     s = os.path.split(file_path)
     video = s[1]
-    target_dir = f'{cwd}\\Videos\\{video}'
+    target_dir = f'{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\{video}'
     log.insert(END, "Preparing Video For Use...\n\n")
     copy(file_path, target_dir)
     log.insert(END, f"Selected Video Copied To {target_dir}\n\n")
@@ -248,7 +258,28 @@ def setup():
     execute_query(connection, add_video)
     log.insert(END, "Video Added To Database...\n\n")
     log.insert(END, "Video Prepared For Use...\n\n")
-    log.insert(END, "Please Restart This Launcher To Use Video!")
+    if not os.path.exists("C:\\Riot Games\\"):
+        install_location = str(askdirectory(title="Select The Location Where The Riot Games Folder Is Installed"))
+        if "VALORANT" in install_location.upper() or "RIOT GAMES" not in install_location.upper():
+            log.insert(END, "Selected Location Is Not A Valid Valorant Installation Location Please Restart To Use Again\n\n")
+            showerror(title="Error", message="Selected Location Is Not A Valid Valorant Installation Location Please Restart To Use Again")
+            try:
+                connection.close()  # this may be seen as an error/warning but it is functional
+                os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
+                pass
+            except Exception:
+                pass
+            pass
+        else:
+            pass
+    else:
+        install_location = "C:\\Riot Games\\"
+        pass
+    log.insert(END, f"Riot Games Location: {install_location}\n\n")
+    install_location_file = open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt", "w+")
+    install_location_file.write(install_location)
+    install_location_file.close()
+    log.insert(END, "Please Restart This Launcher To Use...")
     restart_ask = askyesno(title="Restart Launcher?", message="Would you like to restart the launcher now?")
     if restart_ask:
         log.insert(END, "Restarting Launcher...\n\n")
@@ -261,6 +292,7 @@ def add_video():
     add_video_button.pack_forget()
     remove_video_button.pack_forget()
     view_videos_button.pack_forget()
+    other_settings_button.pack_forget()
     root.geometry("500x300")
     start_button.pack()
     settings_button.pack()
@@ -296,7 +328,7 @@ def add_video():
         add_videos_window.destroy()
     else:
         pass
-    target_dir = f'{cwd}\\Videos\\{video}'
+    target_dir = f'{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\{video}'
     log.insert(END, "Preparing Video For Use...\n\n")
     copy(file_path, target_dir)
     log.insert(END, f"Selected Video Copied To {target_dir}\n\n")
@@ -317,6 +349,7 @@ def remove_video():
     add_video_button.pack_forget()
     remove_video_button.pack_forget()
     view_videos_button.pack_forget()
+    other_settings_button.pack_forget()
     root.geometry("500x300")
     start_button.pack()
     settings_button.pack()
@@ -355,7 +388,7 @@ def remove_video():
         for video in videos:
             delete_vid = str(video).replace("(", "").replace(")", "").replace("'", "").replace(",", "")
             log.insert(END, f"Removing Video: {delete_vid}\n\n")
-            os.remove(f"{cwd}\\Videos\\{delete_vid}")
+            os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\{delete_vid}")
         delete_video = f"""DELETE FROM videos where id = {remove_input}"""
         execute_query(connection, delete_video)
         log.insert(END, "Video Removed From Database...\n\n")
@@ -369,7 +402,7 @@ def remove_video():
         log.insert(END, f"{list_of_videos}\n\n")
         if str(list_of_videos) == "[]":
             connection.close()
-            os.remove(f"{cwd}\\videos.sqlite")
+            os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
             log.insert(END, "Deleted database...")
             restart_ask = askyesno(title="Restart", message="A Restart Is required! Would you like to restart the program?")
             if restart_ask == True:
@@ -384,6 +417,7 @@ def view_videos():
     add_video_button.pack_forget()
     remove_video_button.pack_forget()
     view_videos_button.pack_forget()
+    other_settings_button.pack_forget()
     root.geometry("500x300")
     start_button.pack()
     settings_button.pack()
@@ -407,6 +441,49 @@ def view_videos():
         pass
 
 
+def change_install_location():
+    install_location == str(askdirectory(title="Change Riot Games Install Location"))
+    if "VALORANT" in install_location.upper() or "RIOT GAMES" not in install_location.upper() or "RIOT CLIENT" in install_location.upper():
+        showerror(title="Error", message="Invalid Installation Folder!")
+        restart_ask = askyesno(title="Restart", message="A Restart Is required! Would you like to restart the program?")
+        if restart_ask == True:
+            os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+        else:
+            sys.exit(0)
+    else:
+        install_location_file.seek(0)
+        install_location_file.truncate(0)
+        install_location_file.write(str(install_location))
+        install_location_file.close()
+        showinfo(title="Success", message="Settings Saved! Please Restart To Use Again!")
+        restart_ask = askyesno(title="Restart", message="A Restart Is required! Would you like to restart the program?")
+        if restart_ask == True:
+            os.execl(sys.executable, os.path.abspath(__file__), *sys.argv)
+        else:
+            sys.exit(0)
+
+
+def other_settings():
+    add_video_button.pack_forget()
+    remove_video_button.pack_forget()
+    view_videos_button.pack_forget()
+    other_settings_button.pack_forget()
+    root.geometry("500x300")
+    start_button.pack()
+    settings_button.pack()
+    root.title("Valorant Custom Home Screen Launcher")
+    other_settings_window = Toplevel(root)
+    other_settings_window.title("Valorant Custom Home Screen Launcher (OTHER SETTINGS)")
+    other_settings_window.geometry("500x500")
+    other_settings_window.resizable(False, False)
+    other_settings_label = Label(other_settings_window, text="Change The Settings You Would Like To And Click The Save Button!")
+    other_settings_label.pack()
+    install_location_label = Label(other_settings_window, text=f"Current Install Location: {install_location}")
+    install_location_label.pack()
+    install_location_button = Button(other_settings_window, text="Change Install Location", command=change_install_location)
+    install_location_button.pack()
+
+
 def settings():
     start_button.pack_forget()
     settings_button.pack_forget()
@@ -415,10 +492,14 @@ def settings():
     add_video_button.pack()
     remove_video_button.pack()
     view_videos_button.pack()
+    other_settings_button.pack()
     pass
 
 
 def main():
+    install_location_file = open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt", "r")
+    install_location = install_location_file.read()
+    install_location_file.close()
     select_videos = "SELECT * from videos"
     videos = execute_read_query(connection, select_videos)
     list_of_videos = []
@@ -446,13 +527,21 @@ def main():
     log.insert(END, f"Video Selected: {vid}\n\n")
     log.insert(END, f"\n\nInjecting Video: {vid}\n\n")
     log.insert(END, "Injecting video via XCopy\n\n")
-    os.system(f'xcopy "{cwd}\\Videos\\{vid}" "C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu" /K /H /Y')
+    os.system(f'xcopy "{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\{vid}" "{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu" /K /H /Y')
     log.insert(END, "XCopy Executed!\n\n")
     log.insert(END, "Video Injected!\n\n")
     log.insert(END, "Removing Default Video...\n\n")
     try:
-        os.remove(f'C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\HomeScreen.mp4')
-        log.insert(END, "Default Video Removed\n\n")
+        if os.path.exists(f"{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\VCT_HomeScreen_Trophy_v4_ZoomedIn.mp4"):
+            def_vid = "VCT_HomeScreen_Trophy_v4_ZoomedIn"
+            os.remove(f"{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\VCT_HomeScreen_Trophy_v4_ZoomedIn.mp4")
+            log.insert(END, "Default Video Removed!\n\n")
+            pass
+        else:
+            def_vid = "HomeScreen"
+            os.remove(f'{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\HomeScreen.mp4')
+            log.insert(END, "Default Video Removed\n\n")
+            pass
         pass
     except Exception as e:
         log.insert(END, f'Error: {e}\n')
@@ -460,7 +549,7 @@ def main():
         showerror(title="Error", message=f"The error '{e}' occurred while removing default video.")
         pass
     log.insert(END, "Renaming Custom Video...\n\n")
-    os.rename(f'C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{vid}', 'C:\\Riot Games\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\HomeScreen.mp4')
+    os.rename(f'{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{vid}', f'{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{def_vid}.mp4')
     log.insert(END, "Custom Video Renamed\n\n")
     log.insert(END, "Custom Home Screen Injection Successfull!\n\n")
 
@@ -471,16 +560,33 @@ root.geometry("500x300")
 root.resizable(False, False)
 user_dir = os.path.expanduser("~")
 cwd = os.getcwd()
-if not os.path.exists(f"{cwd}\\Videos\\"):
-    os.mkdir(f"{cwd}\\Videos\\")
+if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\"):
+    os.mkdir(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\")
     pass
 else:
     pass
-if not os.path.exists(f"{cwd}\\videos.sqlite"):
+if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\"):
+    os.mkdir(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\")
+    pass
+else:
+    pass
+if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\"):
+    os.mkdir(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\")
+    pass
+else:
+    pass
+if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt"):
+    open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt", "w+")
+    pass
+else:
+    install_location_file = open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt", "r+")
+    install_location = install_location_file.read()
+    pass
+if not os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite"):
     showwarning(title="Setup", message="This Launcher Has Not Yet Been Set Up! Please Complete The Following Setup Process To Use This Program!")
     setup()
 else:
-    connection = create_connection(f"{cwd}\\videos.sqlite")
+    connection = create_connection(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
     select_videos = "SELECT * from videos"
     videos = execute_read_query(connection, select_videos)
     list_of_videos = []
@@ -504,18 +610,20 @@ main_menu.add_command(label="Restart", command=restart)
 main_menu.add_command(label="Exit", command=exit_launcher)
 menubar.add_cascade(label="Menu", menu=main_menu)
 root.config(menu=menubar)
+root.protocol("WM_DELETE_WINDOW", exit_launcher)
 start_button = Button(root, text="Start(Click Imediately After Launching VALORANT)", font=("TrebuchetMS", 12, 'bold'), width="500", height="10", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=main)
 settings_button = Button(root, text="Settings(Modify Videos And Customize Program)", font=("TrebuchetMS", 12, 'bold'), width="500", height="10", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=settings)
 add_video_button = Button(root, text="Add Video", font=("TrebuchetMS", 12, 'bold'), width="500", height="5", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=add_video)
 remove_video_button = Button(root, text="Remove Video", font=("TrebuchetMS", 12, 'bold'), width="500", height="5", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=remove_video)
 view_videos_button = Button(root, text="View Videos", font=("TrebuchetMS", 12, 'bold'), width="500", height="5", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=view_videos)
+other_settings_button = Button(root, text="Other Settings", font=("TrebuchetMS", 12, 'bold'), width="500", height="5", bd=0, bg="#32de97", activebackground="#ffffff", fg='#ffffff', command=other_settings)
 start_button.pack()
 settings_button.pack()
 try:
     url = "http://github.com/teekar2023/ValorantCustomHomeScreen/releases/latest/"
     r = requests.get(url, allow_redirects=True)
     redirected_url = r.url
-    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.0.0":
+    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.1.0":
         changelog_url = "https://raw.githubusercontent.com/teekar2023/ValorantCustomHomeScreen/master/CHANGELOG.txt"
         changelog_download = urllib.request.urlopen(changelog_url)
         if not os.path.exists(f"{cwd}\\Temp\\"):
@@ -540,12 +648,12 @@ try:
             changelog_file.write(str.encode("There Was An Error Downloading Changelog Information!"))
             pass
         changelog_file.close()
-        update_thread = Thread(target=update)
-        update_thread.start()
+        showinfo(title="Update Available", message="There Is An Update Available! Please Install The Update And See What Is New By Clicking The Update Button In The Dropdown Menu!")
         pass
     else:
         pass
 except Exception as e:
     showerror(title="Error", message=f"The error '{e}' occurred while checking for updates/downloading changelog.")
     pass
+string_var = StringVar()
 root.mainloop()
