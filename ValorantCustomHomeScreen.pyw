@@ -41,7 +41,7 @@ def update():
     url = "http://github.com/teekar2023/ValorantCustomHomeScreen/releases/latest/"
     r = requests.get(url, allow_redirects=True)
     redirected_url = r.url
-    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.1.0":
+    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.2.0":
         new_url = str(redirected_url) + "/ValCustomHomeSetup.exe"
         download_url = new_url.replace("tag", "download")
         update_window = Toplevel(root)
@@ -66,9 +66,39 @@ def update():
         except Exception as e:
             changelog_text.insert(END, f"There Was An Error While Trying To Read The Changelog File! Error: {e}")
             pass
+        changelog_text.config(state=DISABLED)
         update_button.wait_variable(int_var)
-        webbrowser.open(redirected_url)
-        webbrowser.open(download_url)
+        download_local = askyesno(title="Download Update", message="Press 'YES' to download the update from the "
+                                                                   "program or press 'NO' to download the update from"
+                                                                   " a web browser!")
+        if download_local:
+            new_url = str(redirected_url) + "/ValCustomHomeSetup.exe"
+            download_url = new_url.replace("tag", "download")
+            if os.path.exists(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\ValCustomHomeSetup.exe"):
+                os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\ValCustomHomeSetup.exe")
+                pass
+            else:
+                pass
+            create_f = open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\ValCustomHomeSetup.exe", "w+")
+            create_f.close()
+            f = open(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\ValCustomHomeSetup.exe", "wb")
+            f2 = urllib.request.urlopen(download_url)
+            while True:
+                data = f2.read()
+                if not data:
+                    break
+                else:
+                    pass
+                f.write(data)
+            f.close()
+            showinfo("Download Complete", "The Update Has Been Downloaded! Installer Will Launch After Closing This Popup!")
+            os.startfile(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\ValCustomHomeSetup.exe")
+            sys.exit(0)
+        else:
+            showinfo(title="Update", message="The Update Will Now Be Downloaded From The Web Browser!")
+            webbrowser.open(redirected_url)
+            webbrowser.open(download_url)
+            sys.exit(0)
     else:
         showinfo(title="Update", message="You are already using the latest version of the launcher!")
 
@@ -92,6 +122,7 @@ def changelog():
                               text="Check For Update", width="500", height="5",
                               bd=0, bg="#32de97", activebackground="#3c9d9b", fg='#ffffff')
     check_for_update.pack()
+    changelog_text.config(state=DISABLED)
 
 
 def launcher_license():
@@ -109,6 +140,7 @@ def launcher_license():
     except Exception as e:
         license_text.insert(END, f"There Was An Error While Trying To Read The License File! Error: {e}")
         pass
+    license_text.config(state=DISABLED)
 
 
 def about():
@@ -130,15 +162,15 @@ def about():
                             text="License", width="500", height="5",
                             bd=0, bg="#32de97", activebackground="#3c9d9b", fg='#ffffff')
     license_button.pack()
+    about_text.config(state=DISABLED)
 
 
 def reset():
     reset_confirm = askyesno("Reset", "Are You Sure You Want To Reset The Launcher?")
     if reset_confirm:
-        rmtree(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Videos\\")
         connection.close()
-        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\videos.sqlite")
-        os.remove(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\Settings\\install_location.txt")
+        install_location_file.close()
+        rmtree(f"{user_dir}\\Documents\\ValorantCustomHomeScreenLauncher\\")
         showinfo("Reset", "The Launcher Has Been Reset! Please Restart To Use Again!")
         restart_confirm = askyesno("Restart", "Would You Like To Restart The Launcher?")
         if restart_confirm:
@@ -439,6 +471,7 @@ def view_videos():
     for video in videos:
         log.insert(END, f"{video}\n")
         pass
+    log.config(state=DISABLED)
 
 
 def change_install_location():
@@ -552,6 +585,7 @@ def main():
     os.rename(f'{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{vid}', f'{install_location}\\VALORANT\\live\\ShooterGame\\Content\\Movies\\Menu\\{def_vid}.mp4')
     log.insert(END, "Custom Video Renamed\n\n")
     log.insert(END, "Custom Home Screen Injection Successfull!\n\n")
+    log.config(state=DISABLED)
 
 
 root = tk.Tk()
@@ -623,7 +657,7 @@ try:
     url = "http://github.com/teekar2023/ValorantCustomHomeScreen/releases/latest/"
     r = requests.get(url, allow_redirects=True)
     redirected_url = r.url
-    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.1.0":
+    if redirected_url != "https://github.com/teekar2023/ValorantCustomHomeScreen/releases/tag/v2.2.0":
         changelog_url = "https://raw.githubusercontent.com/teekar2023/ValorantCustomHomeScreen/master/CHANGELOG.txt"
         changelog_download = urllib.request.urlopen(changelog_url)
         if not os.path.exists(f"{cwd}\\Temp\\"):
@@ -648,12 +682,12 @@ try:
             changelog_file.write(str.encode("There Was An Error Downloading Changelog Information!"))
             pass
         changelog_file.close()
-        showinfo(title="Update Available", message="There Is An Update Available! Please Install The Update And See What Is New By Clicking The Update Button In The Dropdown Menu!")
+        showinfo(title="Update Available", message="There Is An Update Available! Please Install The Update And See "
+                                                   "What Is New By Clicking The Update Button In The Dropdown Menu!")
         pass
     else:
         pass
 except Exception as e:
     showerror(title="Error", message=f"The error '{e}' occurred while checking for updates/downloading changelog.")
     pass
-string_var = StringVar()
 root.mainloop()

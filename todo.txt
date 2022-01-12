@@ -1,4 +1,2 @@
-download updater from app
-make all text fields non-editable after text is printed
 start if valorant running (task checker) (setting)
 os.startfile to start valorant and start wait timeout (setting)

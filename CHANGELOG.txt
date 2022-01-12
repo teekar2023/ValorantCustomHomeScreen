@@ -1,9 +1,5 @@
-New In Version 2.1.0:
-Database and all videos now save to a folder in user documents directory!
-Added new 'other settings' window!
-Added option to change riot games installation location in 'other settings'
-Pressing the main window close button now prompts to confirm exit!
-Removed unnecessary imports and made launcher installation size slightly smaller!
-Removed automatic update window launch when update is available!
-Updated to work with new VALORANT Champions HomeScreen video!
-Some other minor changes and fixes!
+New In Version 2.2.0:
+Added option to download and run update installer from the launcher!
+Reset Fixes!
+Fixed a bug where log text fields could be edited by user!
+Few other small changes and fixes!
